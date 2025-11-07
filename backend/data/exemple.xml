@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<estufa id="EST01">
+
+  <sensores>
+    <sensor id="S01" tipo="temperatura">
+      <unidade>°C</unidade>
+    </sensor>
+    <sensor id="S02" tipo="umidadeAr">
+      <unidade>%</unidade>
+    </sensor>
+    <sensor id="S03" tipo="umidadeSolo">
+      <unidade>%</unidade>
+    </sensor>
+    <sensor id="S04" tipo="pH">
+      <unidade>pH</unidade>
+    </sensor>
+    <sensor id="S05" tipo="CE">
+      <unidade>mS/cm</unidade>
+    </sensor>
+    <sensor id="S06" tipo="luminosidade">
+      <unidade>lux</unidade>
+    </sensor>
+    <sensor id="S07" tipo="co2">
+      <unidade>ppm</unidade>
+    </sensor>
+  </sensores>
+
+  <leituras>
+    <leitura id="L01">
+      <dataHora>2025-10-20T14:30:00</dataHora>
+      <sensorRef ref="S01"/>
+      <valor>22.5</valor>
+    </leitura>
+    <leitura id="L02">
+      <dataHora>2025-10-20T14:30:00</dataHora>
+      <sensorRef ref="S02"/>
+      <valor>70.0</valor>
+    </leitura>
+    <leitura id="L03">
+      <dataHora>2025-10-20T14:30:00</dataHora>
+      <sensorRef ref="S03"/>
+      <valor>65.0</valor>
+    </leitura>
+    <leitura id="L04">
+      <dataHora>2025-10-20T14:30:00</dataHora>
+      <sensorRef ref="S04"/>
+      <valor>6.0</valor>
+    </leitura>
+    <leitura id="L05">
+      <dataHora>2025-10-20T14:30:00</dataHora>
+      <sensorRef ref="S05"/>
+      <valor>1.5</valor>
+    </leitura>
+    <leitura id="L06">
+      <dataHora>2025-10-20T14:30:00</dataHora>
+      <sensorRef ref="S06"/>
+      <valor>30000</valor>
+    </leitura>
+    <leitura id="L07">
+      <dataHora>2025-10-20T14:30:00</dataHora>
+      <sensorRef ref="S07"/>
+      <valor>800</valor>
+    </leitura>
+  </leituras>
+
+  <configuracoes>
+    <limiteSensor tipo="temperatura">
+      <min>12</min>
+      <max>25</max>
+    </limiteSensor>
+    <limiteSensor tipo="umidadeAr">
+      <min>60</min>
+      <max>80</max>
+    </limiteSensor>
+    <limiteSensor tipo="umidadeSolo">
+      <min>60</min>
+      <max>80</max>
+    </limiteSensor>
+    <limiteSensor tipo="pH">
+      <min>5.5</min>
+      <max>6.5</max>
+    </limiteSensor>
+    <limiteSensor tipo="CE">
+      <min>1.2</min>
+      <max>1.8</max>
+    </limiteSensor>
+    <limiteSensor tipo="luminosidade">
+      <min>15000</min>
+      <max>50000</max>
+    </limiteSensor>
+    <limiteSensor tipo="co2">
+      <min>350</min>
+      <max>1000</max>
+    </limiteSensor>
+  </configuracoes>
+
+</estufa>
