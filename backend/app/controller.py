@@ -15,7 +15,9 @@ def receber_leitura():
     # validação xsd
     xml_doc = service_xml.validar_xsd(xml_data_string)
 
-    # validação de regras (fazer)
+    # validação de regras
+    service_xml.validar_regras_negocio(xml_doc)
+
     # serviço de persistência (fazer)
 
     # se tudo passou, retorna sucesso
