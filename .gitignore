@@ -1,0 +1,8 @@
+# arquivos de cache e compilação do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# arquivos do PyCharm
+.idea/
