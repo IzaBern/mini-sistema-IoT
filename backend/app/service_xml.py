@@ -147,3 +147,75 @@ def persistir_xml(xml_data_string: str, xml_doc):
         # Isto é um erro 500 (culpa do servidor).
         print(f"Erro inesperado na persistência: {e}")
         abort(500, description=f"Erro interno ao salvar o ficheiro: {e}")
+
+
+def _xml_doc_para_dict(xml_doc):
+    # converter um XML Doc (lxml) num dicionario
+    # python limpo e legível (pronto para JSON).
+    try:
+        # Extrai o ID da estufa
+        estufa_id = xml_doc.xpath("/estufa/@id")[0]
+        leituras_lista = []
+        # Itera sobre cada nó <leitura>
+        for leitura_node in xml_doc.xpath("/estufa/leituras/leitura"):
+            leitura_dict = {
+                "id": leitura_node.get("id"),
+                "dataHora": leitura_node.xpath("./dataHora/text()")[0],
+                "sensorRef": leitura_node.xpath("./sensorRef/@ref")[0],
+                "valor": float(leitura_node.xpath("./valor/text()")[0])
+            }
+            leituras_lista.append(leitura_dict)
+
+        # Retorna um dicionário estruturado
+        return {
+            "estufa_id": estufa_id,
+            "leituras": leituras_lista
+        }
+    except Exception as e:
+        print(f"Erro ao converter XML para Dict: {e}")
+        # Se um ficheiro no disco estiver corrompido, não quebra a API inteira
+        return None
+
+
+def ler_dados_persistidos():
+    # lê todos os ficheiros XML da pasta 'data/', converte-os
+    # para dicionários e retorna uma lista de todos os dados.
+    print("Log: Iniciando leitura de dados persistidos...")
+    todos_os_dados = []
+
+    try:
+        # lista todos os ficheiros no diretório de dados
+        ficheiros = os.listdir(DATA_DIR)
+
+        # filtra apenas os que são .xml
+        xml_ficheiros = [f for f in ficheiros if f.endswith('.xml')]
+
+        # itera, lê e converte cada ficheiro
+        for ficheiro in xml_ficheiros:
+            filepath = os.path.join(DATA_DIR, ficheiro)
+
+            try:
+                # Abre e lê o ficheiro XML
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    xml_string = f.read()
+
+                # Faz o parse
+                xml_doc = etree.fromstring(xml_string.encode('utf-8'))
+
+                # Converte para dicionário usando a nossa helper
+                dados_convertidos = _xml_doc_para_dict(xml_doc)
+
+                if dados_convertidos:
+                    todos_os_dados.append(dados_convertidos)
+
+            except Exception as e:
+                # Loga um erro se um ficheiro específico falhar, mas continua
+                print(f"Erro ao processar o ficheiro {ficheiro}: {e}")
+
+        print("Log: Leitura e conversão de dados concluída.")
+        return todos_os_dados
+
+    except Exception as e:
+        # Erro grave (ex: não consegue ler a pasta 'data/')
+        print(f"Erro crítico ao ler dados persistidos: {e}")
+        abort(500, description="Erro interno ao aceder à base de dados de XMLs.")

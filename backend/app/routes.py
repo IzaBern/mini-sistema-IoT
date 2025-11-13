@@ -9,9 +9,15 @@ def create_app():
     app = Flask(__name__)
 
     # --- Rotas da API ---
+    # rota POST
     @app.route('/api/leituras', methods=['POST'])
     def rota_receber_leitura():
         return controller.receber_leitura()
+
+    # rota GET
+    @app.route('/api/leituras', methods=['GET'])
+    def rota_listar_leituras():
+        return controller.listar_leituras()
 
     # (definir as outras rotas do T2 aqui)
 

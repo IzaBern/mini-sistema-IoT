@@ -21,3 +21,10 @@ def receber_leitura():
 
     # se tudo passou, retorna sucesso
     return make_response(jsonify(message="Leitura recebida e validada (XSD) com sucesso."), 201)
+
+
+def listar_leituras():
+    # listar todas as leituras persistidas
+    dados = service_xml.ler_dados_persistidos()
+    # retorna dados com status 200 (ok)
+    return make_response(jsonify(dados), 200)

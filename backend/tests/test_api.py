@@ -2,7 +2,6 @@
 import pytest
 import os
 from backend.app.main import app
-from backend.app.main import app
 from backend.config.settings import DATA_DIR
 
 XML_VALIDO = """
@@ -64,19 +63,23 @@ XML_INVALIDO_REGRAS = """
 @pytest.fixture
 def client():
     # configura um cliente de teste do Flask
+    # limpa a pasta de dados para garantir que
+    # cada teste é 100% isolado.
+
     app.config['TESTING'] = True  # modo de teste
-    # teste de persistência do xml
-    TEST_FILE_PATH = os.path.join(DATA_DIR, "L01.xml")
-    # antes do teste
-    if os.path.exists(TEST_FILE_PATH):
-        os.remove(TEST_FILE_PATH)
+
+    # antes de cada teste
+    for f in os.listdir(DATA_DIR):
+        if f.endswith('.xml'):
+            os.remove(os.path.join(DATA_DIR, f))
 
     with app.test_client() as client:
-        yield client  # disponibiliza o 'client' para os testes
+        yield client  # <-- teste roda aqui
 
-    # limpa o ficheiro de teste depois que termina
-    if os.path.exists(TEST_FILE_PATH):
-        os.remove(TEST_FILE_PATH)
+    # depois de cada teste
+    for f in os.listdir(DATA_DIR):
+        if f.endswith('.xml'):
+            os.remove(os.path.join(DATA_DIR, f))
 
 
 # --- Testes ---
@@ -152,3 +155,44 @@ def test_post_leitura_falha_conflito_409(client):
     assert response2.status_code == 409
     assert 'error' in response2.json
     assert "Conflito" in response2.json['error']['description']
+
+
+def test_get_leituras(client):
+    # Testa o GET /api/leituras.
+    # cria dados válidos (POST) e verifica
+    # se o GET os retorna corretamente.
+
+    # cria os dados e garante q o ambiente tá limpo
+    test_file_path = os.path.join(DATA_DIR, "L01.xml")
+    if os.path.exists(test_file_path):
+        os.remove(test_file_path)
+
+    # envia o xml válido para ser persistido
+    response_post = client.post('/api/leituras',
+                                data=XML_VALIDO,
+                                content_type='application/xml')
+
+    assert response_post.status_code == 201
+
+    # chama o GET
+    response_get = client.get('/api/leituras')
+
+    # --- Asserts ---
+    assert response_get.status_code == 200
+    # A resposta é uma lista?
+    assert isinstance(response_get.json, list)
+    # A lista deve conter 1 item (o ficheiro que acabámos de criar)
+    assert len(response_get.json) == 1
+    # Verifica o conteúdo da resposta
+    dados_estufa = response_get.json[0]
+    assert dados_estufa['estufa_id'] == 'E01'
+    # Verifica se as duas leituras do XML_VALIDO estão lá
+    assert len(dados_estufa['leituras']) == 2
+    assert dados_estufa['leituras'][0]['id'] == 'L01'
+    assert dados_estufa['leituras'][0]['valor'] == 22.5
+    assert dados_estufa['leituras'][1]['id'] == 'L02'
+    assert dados_estufa['leituras'][1]['valor'] == 6.0
+
+    # --- Limpeza ---
+    if os.path.exists(test_file_path):
+        os.remove(test_file_path)
