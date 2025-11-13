@@ -79,13 +79,9 @@ def validar_regras_negocio(xml_doc):
                 max_val = regra["max"]
 
                 if not (min_val <= valor_leitura <= max_val):
-                    # se tá fora da faixa, aborta a requisição e
-                    # solta a mensagem de erro e o código 400
-                    msg_erro = f"Leitura ID {leitura_id}: Valor {valor_leitura} " \
-                               f"para {tipo_sensor} está fora da faixa permitida " \
-                               f"({min_val} - {max_val})."
+                    # se tá fora da faixa, o alerta deve ser acionado
+                    msg_erro = f"ALERTA: Leitura ID {leitura_id}: Valor {valor_leitura} para {tipo_sensor} está fora da faixa permitida ({min_val} - {max_val})."
                     print(f"Log: {msg_erro}")
-                    abort(400, description=msg_erro)
 
         print("Log: Validação de regras de negócio bem-sucedida.")
         return True
@@ -219,3 +215,73 @@ def ler_dados_persistidos():
         # Erro grave (ex: não consegue ler a pasta 'data/')
         print(f"Erro crítico ao ler dados persistidos: {e}")
         abort(500, description="Erro interno ao aceder à base de dados de XMLs.")
+
+
+def ler_dados_de_alerta():
+    # lê todos os XMLs persistidos, aplica as regras de negócio
+    # retorna uma lista das leituras que estão fora dos limites.
+    print("Log: Iniciando verificação de alertas...")
+    alertas = []
+
+    try:
+        # lista todos os ficheiros no diretório de dados
+        ficheiros = os.listdir(DATA_DIR)
+        xml_ficheiros = [f for f in ficheiros if f.endswith('.xml')]
+
+        # itera por cada ficheiro XML
+        for ficheiro in xml_ficheiros:
+            filepath = os.path.join(DATA_DIR, ficheiro)
+
+            try:
+                # Abre, lê e faz o parse do ficheiro
+                with open(filepath, 'r', encoding='utf-8') as f:
+                    xml_string = f.read()
+                xml_doc = etree.fromstring(xml_string.encode('utf-8'))
+
+                # Obtém o ID da estufa
+                estufa_id = xml_doc.xpath("/estufa/@id")[0]
+
+                # verificação de regras (reutilizada do POST)
+
+                # descobre o tipo do sensor
+                sensores = {}
+                for sensor in xml_doc.xpath("/estufa/sensores/sensor"):
+                    sensores[sensor.get("id")] = sensor.get("tipo")
+
+                # itera sobre as leituras do ficheiro
+                for leitura in xml_doc.xpath("/estufa/leituras/leitura"):
+                    sensor_ref_id = leitura.xpath("./sensorRef/@ref")[0]
+                    tipo_sensor = sensores.get(sensor_ref_id)
+                    valor_leitura = float(leitura.xpath("./valor/text()")[0])
+
+                    # verifica a regra
+                    if tipo_sensor in REGRAS_VALIDACAO:
+                        regra = REGRAS_VALIDACAO[tipo_sensor]
+                        min_val = regra["min"]
+                        max_val = regra["max"]
+
+                        # se NAO estiver na faixa, é um alerta e vai pra lista
+                        if not (min_val <= valor_leitura <= max_val):
+                            alerta_info = {
+                                "estufa_id": estufa_id,
+                                "leitura_id": leitura.get("id"),
+                                "sensor_id": sensor_ref_id,
+                                "tipo": tipo_sensor,
+                                "valor_lido": valor_leitura,
+                                "faixa_ideal": f"{min_val} - {max_val}",
+                                "dataHora": leitura.xpath("./dataHora/text()")[0],
+                                "ficheiro_origem": ficheiro
+                            }
+                            alertas.append(alerta_info)
+
+            except Exception as e:
+                # Loga erro de um ficheiro específico, mas continua para o próximo
+                print(f"Erro ao processar alertas do ficheiro {ficheiro}: {e}")
+
+        print("Log: Verificação de alertas concluída.")
+        return alertas
+
+    except Exception as e:
+        # Erro grave (ex: não consegue ler a pasta 'data/')
+        print(f"Erro crítico ao ler dados de alerta: {e}")
+        abort(500, description="Erro interno ao processar alertas.")

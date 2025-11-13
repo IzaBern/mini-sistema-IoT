@@ -44,12 +44,12 @@ XML_INVALIDO_REGRAS = """
         <sensor id="S02" tipo="pH"><unidade>pH</unidade></sensor>
     </sensores>
     <leituras>
-        <leitura id="L01">
+        <leitura id="L03">
             <dataHora>2025-11-10T14:30:00</dataHora>
             <sensorRef ref="S01"/>
             <valor>22.5</valor>
         </leitura>
-        <leitura id="L02">
+        <leitura id="L04">
             <dataHora>2025-11-10T14:31:00</dataHora>
             <sensorRef ref="S02"/>
             <valor>5.0</valor>
@@ -119,18 +119,15 @@ def test_post_leitura_falha_xsd(client):
 
 def test_post_leitura_falha_regras_negocio(client):
     # xml válido no xsd, mas falha nas regras de negócio
-    # espera um status 400
+    # deve chamar o alerta
     response = client.post('/api/leituras',
                            data=XML_INVALIDO_REGRAS,
                            content_type='application/xml')
 
-    # verifica se a resposta foi 400 (Bad Request)
-    assert response.status_code == 400
-    # verifica se a resposta de erro é um JSON
-    assert 'error' in response.json
-    # verifica se a mensagem de erro menciona a faixa de valor
-    assert "fora da faixa" in response.json['error']['description']
-    assert "5.0" in response.json['error']['description']
+    # chamado para o alerta de sensor fora da faixa
+    assert response.status_code == 201
+    # verifica se o ficheiro foi criado
+    assert os.path.exists(os.path.join(DATA_DIR, "L03.xml"))
 
 
 def test_post_leitura_falha_conflito_409(client):
@@ -196,3 +193,39 @@ def test_get_leituras(client):
     # --- Limpeza ---
     if os.path.exists(test_file_path):
         os.remove(test_file_path)
+
+
+def test_get_alertas(client):
+    # Testa o GET /api/alertas.
+    # posta um xml com regra inválida e chama o alerta
+    # verifica se o GET retorna só a leitura inválida (a de pH 5.0).
+
+    # ficheiro 100% certo, não deve gerar alertas.
+    response_post_1 = client.post('/api/leituras',
+                                  data=XML_VALIDO,
+                                  content_type='application/xml')
+    assert response_post_1.status_code == 201
+
+    # ficheiro com 1 alerta (L03.xml)
+    response_post_2 = client.post('/api/leituras',
+                                  data=XML_INVALIDO_REGRAS,
+                                  content_type='application/xml')
+    assert response_post_2.status_code == 201
+
+    # chama GET /api/alertas
+    response_get = client.get('/api/alertas')
+
+    # --- Asserts ---
+    assert response_get.status_code == 200
+    # a resposta é uma lista?
+    assert isinstance(response_get.json, list)
+    # a lista tem só um alerta?
+    assert len(response_get.json) == 1
+
+    # Verifica o conteúdo do alerta
+    alerta = response_get.json[0]
+    assert alerta['leitura_id'] == 'L04'
+    assert alerta['tipo'] == 'pH'
+    assert alerta['valor_lido'] == 5.0
+    assert alerta['faixa_ideal'] == '5.5 - 6.5'
+    assert alerta['ficheiro_origem'] == 'L03.xml'

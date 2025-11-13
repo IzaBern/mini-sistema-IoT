@@ -28,3 +28,10 @@ def listar_leituras():
     dados = service_xml.ler_dados_persistidos()
     # retorna dados com status 200 (ok)
     return make_response(jsonify(dados), 200)
+
+
+def listar_alertas():
+    # chama os alertas
+    dados_alertas = service_xml.ler_dados_de_alerta()
+    # retorna dados com status 200 (ok)
+    return make_response(jsonify(dados_alertas), 200)

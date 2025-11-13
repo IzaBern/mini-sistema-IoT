@@ -8,16 +8,19 @@ from . import controller
 def create_app():
     app = Flask(__name__)
 
-    # --- Rotas da API ---
-    # rota POST
+    # --- Rotas POST ---
     @app.route('/api/leituras', methods=['POST'])
     def rota_receber_leitura():
         return controller.receber_leitura()
 
-    # rota GET
+    # -- Rotas GET --
     @app.route('/api/leituras', methods=['GET'])
     def rota_listar_leituras():
         return controller.listar_leituras()
+
+    @app.route('/api/alertas', methods=['GET'])
+    def rota_listar_alertas():
+        return controller.listar_alertas()
 
     # (definir as outras rotas do T2 aqui)
 
