@@ -14,11 +14,10 @@ def receber_leitura():
 
     # validação xsd
     xml_doc = service_xml.validar_xsd(xml_data_string)
-
     # validação de regras
     service_xml.validar_regras_negocio(xml_doc)
-
-    # serviço de persistência (fazer)
+    # serviço de persistência
+    service_xml.persistir_xml(xml_data_string, xml_doc)
 
     # se tudo passou, retorna sucesso
     return make_response(jsonify(message="Leitura recebida e validada (XSD) com sucesso."), 201)
