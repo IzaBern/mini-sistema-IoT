@@ -22,7 +22,9 @@ def create_app():
     def rota_listar_alertas():
         return controller.listar_alertas()
 
-    # (definir as outras rotas do T2 aqui)
+    @app.route('/api/configuracoes', methods=['GET'])
+    def rota_listar_configurcoes():
+        return controller.listar_configuracoes()
 
     # --- MANIPULADOR DE ERROS ---.
     @app.errorhandler(HTTPException)

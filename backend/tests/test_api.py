@@ -1,8 +1,9 @@
 # testa a aplicação, simulando requisições
 import pytest
 import os
+import json
 from backend.app.main import app
-from backend.config.settings import DATA_DIR
+from backend.config.settings import DATA_DIR, REGRAS_VALIDACAO
 
 XML_VALIDO = """
 <estufa id="E01">
@@ -57,7 +58,39 @@ XML_INVALIDO_REGRAS = """
     </leituras>
 </estufa>
 """
-
+# são os valores padrão, só para não perder a referência
+# fiz o teste editando o config/regras.json manualmente e
+# quando executado o teste, ele realmente substitui
+REGRAS_TESTE = {
+  "temperatura": {
+    "min": 12,
+    "max": 25
+  },
+  "umidadeAr": {
+    "min": 60,
+    "max": 80
+  },
+  "umidadeSolo": {
+    "min": 60,
+    "max": 80
+  },
+  "co2": {
+    "min": 350,
+    "max": 1000
+  },
+  "luminosidade": {
+    "min": 15000,
+    "max": 50000
+  },
+  "pH": {
+    "min": 5.5,
+    "max": 6.5
+  },
+  "CE": {
+    "min": 1.2,
+    "max": 1.8
+  }
+}
 
 # prepara o app para testes
 @pytest.fixture
@@ -73,6 +106,14 @@ def client():
         if f.endswith('.xml'):
             os.remove(os.path.join(DATA_DIR, f))
 
+    # cria um 'regras.json' de teste limpo
+    try:
+        with open(REGRAS_VALIDACAO, 'w', encoding='utf-8') as f:
+            json.dump(REGRAS_TESTE, f, indent=2)
+    except Exception as e:
+        print(f"Erro ao criar regras de teste: {e}")
+
+    # roda o teste
     with app.test_client() as client:
         yield client  # <-- teste roda aqui
 
@@ -229,3 +270,18 @@ def test_get_alertas(client):
     assert alerta['valor_lido'] == 5.0
     assert alerta['faixa_ideal'] == '5.5 - 6.5'
     assert alerta['ficheiro_origem'] == 'L03.xml'
+
+
+def test_get_configuracoes(client):
+    # testa o GET /api/configuracoes.
+    # verifica se a API retorna as regras de validação corretas
+    # que foram definidas no ficheiro 'regras.json'
+
+    # chama GET /api/configuracoes
+    response_get = client.get('/api/configuracoes')
+
+    # --- Asserts ---
+    assert response_get.status_code == 200
+    # Verifica se o JSON retornado é igual
+    # ao nosso dicionário de regras de teste (REGRAS_TESTE)
+    assert response_get.json == REGRAS_TESTE

@@ -2,6 +2,7 @@
 # aprova ou não baseado no xsd definido na T2
 
 import os
+import json
 from lxml import etree
 from flask import abort
 from werkzeug.exceptions import HTTPException
@@ -52,6 +53,8 @@ def validar_xsd(xml_string: str):
 def validar_regras_negocio(xml_doc):
     # valida as regras de negócio (faixas de valores) do xml
     # recebe um documento lxml (retornado pelo validar_xsd).
+
+    REGRAS_VALIDACAO = _get_regras_validacao()
     print("Log: Iniciando validação de regras de negócio...")
 
     try:
@@ -220,6 +223,8 @@ def ler_dados_persistidos():
 def ler_dados_de_alerta():
     # lê todos os XMLs persistidos, aplica as regras de negócio
     # retorna uma lista das leituras que estão fora dos limites.
+
+    REGRAS_VALIDACAO = _get_regras_validacao()
     print("Log: Iniciando verificação de alertas...")
     alertas = []
 
@@ -285,3 +290,26 @@ def ler_dados_de_alerta():
         # Erro grave (ex: não consegue ler a pasta 'data/')
         print(f"Erro crítico ao ler dados de alerta: {e}")
         abort(500, description="Erro interno ao processar alertas.")
+
+
+def _get_regras_validacao():
+    # lê o 'regras.json' e converte em um dicionário Python
+    try:
+        with open(REGRAS_VALIDACAO, 'r', encoding='utf-8') as f:
+            regras = json.load(f)
+        return regras
+    except FileNotFoundError:
+        print(f"Erro Crítico: Ficheiro de regras não encontrado em {REGRAS_VALIDACAO}")
+        return {}  # retorna regras vazias se o ficheiro faltar
+    except json.JSONDecodeError:
+        print(f"Erro Crítico: Ficheiro de regras {REGRAS_VALIDACAO} tem um JSON inválido.")
+        return {}
+    except Exception as e:
+        print(f"Erro inesperado ao ler ficheiro de regras: {e}")
+        return {}
+
+
+def ler_configuracoes_regras():
+    # lê as regras de validação atuais do 'regras.json'
+    print("Log: A ler ficheiro de regras de negócio...")
+    return _get_regras_validacao()

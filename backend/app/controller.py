@@ -35,3 +35,13 @@ def listar_alertas():
     dados_alertas = service_xml.ler_dados_de_alerta()
     # retorna dados com status 200 (ok)
     return make_response(jsonify(dados_alertas), 200)
+
+
+def listar_configuracoes():
+    # lista as configurações de regras atuais
+    dados_regras = service_xml.ler_configuracoes_regras()
+    if not dados_regras:
+        # Se o ficheiro estiver vazio ou corrompido
+        return make_response(jsonify(error="Ficheiro de regras não encontrado ou inválido."), 500)
+
+    return make_response(jsonify(dados_regras), 200)
