@@ -3,10 +3,11 @@
 
 import os
 import json
+import shutil
 from lxml import etree
 from flask import abort
 from werkzeug.exceptions import HTTPException
-from backend.config.settings import XSD_PATH, REGRAS_VALIDACAO, DATA_DIR
+from backend.config.settings import XSD_PATH, REGRAS_VALIDACAO, DATA_DIR, REGRAS_DEFAULT_PATH
 
 # --- Carregamento do Schema ---
 try:
@@ -295,9 +296,16 @@ def ler_dados_de_alerta():
 def _get_regras_validacao():
     # lê o 'regras.json' e converte em um dicionário Python
     try:
+        # Verifica se o ficheiro "live" existe
+        if not os.path.exists(REGRAS_VALIDACAO):
+            print("Log: 'regras_atuais.json' não encontrado. A restaurar dos padrões.")
+            # Copia do default para o atual
+            shutil.copyfile(REGRAS_DEFAULT_PATH, REGRAS_VALIDACAO)
+
         with open(REGRAS_VALIDACAO, 'r', encoding='utf-8') as f:
             regras = json.load(f)
         return regras
+
     except FileNotFoundError:
         print(f"Erro Crítico: Ficheiro de regras não encontrado em {REGRAS_VALIDACAO}")
         return {}  # retorna regras vazias se o ficheiro faltar
@@ -313,3 +321,38 @@ def ler_configuracoes_regras():
     # lê as regras de validação atuais do 'regras.json'
     print("Log: A ler ficheiro de regras de negócio...")
     return _get_regras_validacao()
+
+
+def atualizar_configuracoes_regras(novas_regras: dict):
+    # recebe um dicionário Python e sobrescreve o 'regras.json'
+    print("Log: A atualizar ficheiro de regras de negócio...")
+    try:
+        # REGRAS_VALIDACAO é o caminho para o 'regras.json'
+        with open(REGRAS_VALIDACAO, 'w', encoding='utf-8') as f:
+            # Usa json.dump() para escrever o dicionário no ficheiro
+            # indent=4 torna o ficheiro legível
+            json.dump(novas_regras, f, indent=4)
+
+        print("Log: Ficheiro de regras atualizado com sucesso.")
+        return True
+
+    except TypeError as e:
+        # Erro se 'novas_regras' não for um formato válido
+        print(f"Erro ao atualizar regras (Tipo de dados): {e}")
+        abort(400, description=f"JSON de regras inválido: {e}")
+    except (IOError, OSError) as e:
+        # Erro se o servidor não tiver permissão para escrever no ficheiro
+        print(f"Erro ao atualizar regras (IO): {e}")
+        abort(500, description=f"Erro interno ao escrever no ficheiro de regras: {e}")
+
+
+def resetar_regras_para_default():
+    # força a cópia do 'regras_default.json' por cima do 'regras_atuais.json'
+    try:
+        print("Log: A restaurar regras de negócio para o padrão...")
+        shutil.copyfile(REGRAS_DEFAULT_PATH, REGRAS_VALIDACAO)
+        print("Log: Regras restauradas com sucesso.")
+        return True
+    except Exception as e:
+        print(f"Erro ao restaurar regras: {e}")
+        abort(500, description="Erro interno ao restaurar as regras.")

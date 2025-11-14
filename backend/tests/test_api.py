@@ -2,6 +2,7 @@
 import pytest
 import os
 import json
+import shutil
 from backend.app.main import app
 from backend.config.settings import DATA_DIR, REGRAS_VALIDACAO
 
@@ -53,15 +54,43 @@ XML_INVALIDO_REGRAS = """
         <leitura id="L04">
             <dataHora>2025-11-10T14:31:00</dataHora>
             <sensorRef ref="S02"/>
-            <valor>5.0</valor>
+            <valor>3.0</valor>
         </leitura>
     </leituras>
 </estufa>
 """
-# são os valores padrão, só para não perder a referência
-# fiz o teste editando o config/regras.json manualmente e
-# quando executado o teste, ele realmente substitui
+# todos os valores foram modificados
 REGRAS_TESTE = {
+  "temperatura": {
+    "min": 6,
+    "max": 30
+  },
+  "umidadeAr": {
+    "min": 50,
+    "max": 100
+  },
+  "umidadeSolo": {
+    "min": 40,
+    "max": 70
+  },
+  "co2": {
+    "min": 400,
+    "max": 1000
+  },
+  "luminosidade": {
+    "min": 14000,
+    "max": 40000
+  },
+  "pH": {
+    "min": 4.0,
+    "max": 6.0
+  },
+  "CE": {
+    "min": 1.3,
+    "max": 1.7
+  }
+}
+REGRAS_DEFAULT = {
   "temperatura": {
     "min": 12,
     "max": 25
@@ -267,8 +296,8 @@ def test_get_alertas(client):
     alerta = response_get.json[0]
     assert alerta['leitura_id'] == 'L04'
     assert alerta['tipo'] == 'pH'
-    assert alerta['valor_lido'] == 5.0
-    assert alerta['faixa_ideal'] == '5.5 - 6.5'
+    assert alerta['valor_lido'] == 3.0
+    assert alerta['faixa_ideal'] == '4.0 - 6.0'
     assert alerta['ficheiro_origem'] == 'L03.xml'
 
 
@@ -285,3 +314,30 @@ def test_get_configuracoes(client):
     # Verifica se o JSON retornado é igual
     # ao nosso dicionário de regras de teste (REGRAS_TESTE)
     assert response_get.json == REGRAS_TESTE
+
+
+def test_post_configuracoes_reset(client):
+    # testa o POST /api/configuracoes/reset.
+
+    # muda as regras (PUT)
+    response_put = client.put('/api/configuracoes',
+                              json=REGRAS_TESTE)
+    assert response_put.status_code == 200
+
+    # confirmar a mudança (GET)
+    response_get_1 = client.get('/api/configuracoes')
+    # confere o primeiro valor que foi modificado
+    assert response_get_1.json['temperatura']['min'] == 6
+
+    # chama o reset (POST)
+    response_reset = client.post('/api/configuracoes/reset')
+    assert response_reset.status_code == 200
+    assert response_reset.json['message'] == "Configurações restauradas para o padrão."
+
+    # confirmar o reset (GET)
+    response_get_2 = client.get('/api/configuracoes')
+    assert response_get_2.status_code == 200
+    # O JSON deve ser o de FÁBRICA
+    assert response_get_2.json == REGRAS_DEFAULT
+    # confere se o primeiro valor voltou ao padrão
+    assert response_get_2.json['temperatura']['min'] == 12

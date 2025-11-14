@@ -13,6 +13,10 @@ def create_app():
     def rota_receber_leitura():
         return controller.receber_leitura()
 
+    @app.route('/api/configuracoes/reset', methods=['POST'])
+    def rota_resetar_configuracoes():
+        return controller.resetar_configuracoes()
+
     # -- Rotas GET --
     @app.route('/api/leituras', methods=['GET'])
     def rota_listar_leituras():
@@ -25,6 +29,11 @@ def create_app():
     @app.route('/api/configuracoes', methods=['GET'])
     def rota_listar_configurcoes():
         return controller.listar_configuracoes()
+
+    # -- Rotas PUT --
+    @app.route('/api/configuracoes', methods=['PUT'])
+    def rota_atualizar_configuracoes():
+        return controller.atualizar_configuracoes()
 
     # --- MANIPULADOR DE ERROS ---.
     @app.errorhandler(HTTPException)

@@ -6,3 +6,6 @@ __pycache__/
 
 # arquivos do PyCharm
 .idea/
+
+# ficheiro específico do ambiente
+regras_atuais.json

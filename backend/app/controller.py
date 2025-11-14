@@ -45,3 +45,26 @@ def listar_configuracoes():
         return make_response(jsonify(error="Ficheiro de regras não encontrado ou inválido."), 500)
 
     return make_response(jsonify(dados_regras), 200)
+
+
+def atualizar_configuracoes():
+    # controlador para atualizar as regras de negócio
+
+    # pega o JSON enviado pelo utilizador no corpo (body) do pedido
+    try:
+        novas_regras = request.get_json()
+        if not novas_regras:
+            raise ValueError("Corpo (body) do JSON está vazio.")
+    except Exception as e:
+        return make_response(jsonify(error=f"JSON mal formado: {e}"), 400)
+
+    service_xml.atualizar_configuracoes_regras(novas_regras)
+
+    # retorna sucesso se tudo ok
+    return make_response(jsonify(message="Configurações atualizadas com sucesso."), 200)
+
+
+def resetar_configuracoes():
+    # controlador para restaurar as regras para o padrão.
+    service_xml.resetar_regras_para_default()
+    return make_response(jsonify(message="Configurações restauradas para o padrão."), 200)

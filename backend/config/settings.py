@@ -7,4 +7,5 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 
 # as regras estão em um arquivo .json para que seja possível alterar
 # as configurações (min e máx dos sensores)
-REGRAS_VALIDACAO = os.path.join(BASE_DIR, "config", "regras.json")
+REGRAS_VALIDACAO = os.path.join(BASE_DIR, "config", "regras_atuais.json")
+REGRAS_DEFAULT_PATH = os.path.join(BASE_DIR, "config", "regras_default.json")
