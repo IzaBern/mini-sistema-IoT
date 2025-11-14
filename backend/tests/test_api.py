@@ -2,7 +2,6 @@
 import pytest
 import os
 import json
-import shutil
 from backend.app.main import app
 from backend.config.settings import DATA_DIR, REGRAS_VALIDACAO
 
@@ -38,7 +37,7 @@ XML_INVALIDO_XSD = """
 </estufa>
 """
 
-# esse xml é inválido pq o ph é 5, menor que o min 5.5
+# esse xml é inválido pq o ph é 3, menor que o min 4.0
 XML_INVALIDO_REGRAS = """
 <estufa id="E01">
     <sensores>
@@ -341,3 +340,63 @@ def test_post_configuracoes_reset(client):
     assert response_get_2.json == REGRAS_DEFAULT
     # confere se o primeiro valor voltou ao padrão
     assert response_get_2.json['temperatura']['min'] == 12
+
+
+def test_get_exportar_csv_sucesso(client):
+    # testa o sucesso de GET /api/exportar?formato=csv
+
+    # cria os dados
+    response_post = client.post('/api/leituras',
+                                data=XML_VALIDO,
+                                content_type='application/xml')
+    assert response_post.status_code == 201
+
+    # chama o GET /api/exportar=
+    response_get = client.get('/api/exportar?formato=csv')
+
+    # --- Asserts ---
+    assert response_get.status_code == 200
+    # verifica os Headers
+    assert response_get.content_type == 'text/csv; charset=utf-8'
+    assert response_get.headers['Content-Disposition'] == 'attachment; filename=leituras.csv'
+
+    # Verifica o conteúdo do CSV
+    # .data retorna bytes, por isso .decode()
+    csv_content = response_get.data.decode('utf-8')
+
+    # Verifica o cabeçalho (';' é o separador)
+    assert "estufa_id;leitura_id;dataHora;sensorRef;valor" in csv_content
+
+    # Verifica os dados (',' é o decimal)
+    # Dados do XML_VALIDO: L01 (22.5) e L02 (6.0)
+    assert "E01;L01;2025-11-10T14:30:00;S01;22,5" in csv_content
+    assert "E01;L02;2025-11-10T14:31:00;S02;6,0" in csv_content
+
+
+def test_get_exportar_csv_sem_dados(client):
+    # testa a falha de GET /api/exportar?formato=csv
+    # quando não há ficheiros .xml para processar
+
+    # A fixture 'client' já garantiu que a pasta 'data' está vazia.
+    # chama o GET /api/exportar
+    response_get = client.get('/api/exportar?formato=csv')
+
+    # --- Asserts ---
+    # (O controller deve devolver um JSON de aviso, não um CSV)
+    assert response_get.status_code == 200
+    assert response_get.content_type == 'application/json'
+    assert response_get.json['message'] == "Sem dados para exportar."
+
+
+def test_get_exportar_formato_invalido(client):
+    # testa a falha de GET /api/exportar?formato=csv
+    # quando o ?formato não é 'csv'
+
+    # chama o GET com um formato inválido
+    response_get = client.get('/api/exportar?formato=pdf')
+
+    # --- Asserts ---
+    assert response_get.status_code == 400
+    assert response_get.content_type == 'application/json'
+    assert 'error' in response_get.json
+    assert "Formato de exportação não suportado" in response_get.json['error']

@@ -30,6 +30,10 @@ def create_app():
     def rota_listar_configurcoes():
         return controller.listar_configuracoes()
 
+    @app.route('/api/exportar', methods=['GET'])
+    def rota_exportar_dados():
+        return controller.exportar_dados()
+    
     # -- Rotas PUT --
     @app.route('/api/configuracoes', methods=['PUT'])
     def rota_atualizar_configuracoes():

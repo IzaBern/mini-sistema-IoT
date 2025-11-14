@@ -4,6 +4,7 @@
 import os
 import json
 import shutil
+import pandas as pd
 from lxml import etree
 from flask import abort
 from werkzeug.exceptions import HTTPException
@@ -356,3 +357,53 @@ def resetar_regras_para_default():
     except Exception as e:
         print(f"Erro ao restaurar regras: {e}")
         abort(500, description="Erro interno ao restaurar as regras.")
+
+
+def exportar_dados_para_csv():
+    # Lê todos os dados persistidos, achata e converte
+    # para uma string no formato CSV
+    print("Log: Iniciando exportação para CSV...")
+
+    # obter os dados (reutiliza a nossa função do GET)
+    todos_os_dados = ler_dados_persistidos()
+
+    # "achata" (Flatten) os dados
+    # transforma a lista de estufas (com listas de leituras)
+    # numa lista simples onde cada item é uma leitura
+
+    lista_achatada = []
+    for estufa_data in todos_os_dados:
+        estufa_id = estufa_data.get('estufa_id')
+        for leitura in estufa_data.get('leituras', []):
+            # Cria um novo dicionário "plano" para cada linha do CSV
+            linha = {
+                'estufa_id': estufa_id,
+                'leitura_id': leitura.get('id'),
+                'dataHora': leitura.get('dataHora'),
+                'sensorRef': leitura.get('sensorRef'),
+                'valor': leitura.get('valor')
+            }
+            lista_achatada.append(linha)
+
+    # se não houver dados, retorna uma string vazia
+    if not lista_achatada:
+        print("Log: Sem dados para exportar para CSV.")
+        return ""
+
+    # converter para DataFrame e depois para CSV
+    try:
+        df = pd.DataFrame(lista_achatada)
+
+        # Garante a ordem correta das colunas
+        df = df[['estufa_id', 'leitura_id', 'dataHora', 'sensorRef', 'valor']]
+
+        # Converte para string CSV.
+        # Usamos ';' como separador e ',' como decimal (bom para Excel em PT/BR)
+        csv_string = df.to_csv(index=False, sep=';', decimal=',')
+
+        print("Log: Exportação CSV gerada com sucesso.")
+        return csv_string
+
+    except Exception as e:
+        print(f"Erro ao converter dados para CSV: {e}")
+        abort(500, description="Erro interno ao gerar o ficheiro CSV.")

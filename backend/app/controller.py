@@ -68,3 +68,34 @@ def resetar_configuracoes():
     # controlador para restaurar as regras para o padrão.
     service_xml.resetar_regras_para_default()
     return make_response(jsonify(message="Configurações restauradas para o padrão."), 200)
+
+
+# backend/app/controller.py
+
+# ... (imports de request, jsonify, make_response, service_xml) ...
+
+# ... (funções existentes) ...
+
+# --- NOVA FUNÇÃO EXPORTAR (RF8) ---
+def exportar_dados():
+    # controlador para exportar dados
+    formato = request.args.get('formato', 'json')
+
+    if formato.lower() != 'csv':
+        return make_response(jsonify(error="Formato de exportação não suportado. Use ?formato=csv"), 400)
+
+    # chamar o serviço para gerar a string CSV
+    csv_data = service_xml.exportar_dados_para_csv()
+
+    if not csv_data:
+        return make_response(jsonify(message="Sem dados para exportar."), 200)
+
+    # cria a Resposta de Ficheiro (Download)
+    # 'Response' manual
+    response = make_response(csv_data)
+    # 'Header' para forçar o download
+    response.headers["Content-Disposition"] = "attachment; filename=leituras.csv"
+    # 'MIME type' para que o navegador saiba que é um CSV
+    response.headers["Content-Type"] = "text/csv; charset=utf-8"
+
+    return response
