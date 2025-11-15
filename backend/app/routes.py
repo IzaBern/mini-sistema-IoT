@@ -1,12 +1,14 @@
 # define o endereço POST /api/leituras, para a requisição HTTP
 
 from flask import Flask, jsonify
+import flask_cors
 from werkzeug.exceptions import HTTPException
 from . import controller
 
 
 def create_app():
     app = Flask(__name__)
+    flask_cors.CORS(app)
 
     # --- Rotas POST ---
     @app.route('/api/leituras', methods=['POST'])
@@ -38,6 +40,11 @@ def create_app():
     @app.route('/api/configuracoes', methods=['PUT'])
     def rota_atualizar_configuracoes():
         return controller.atualizar_configuracoes()
+
+    # -- Rotas DELETE --
+    @app.route('/api/leituras', methods=['DELETE'])
+    def rota_excluir_leituras():
+        return controller.excluir_leituras()
 
     # --- MANIPULADOR DE ERROS ---.
     @app.errorhandler(HTTPException)

@@ -9,7 +9,7 @@ XML_VALIDO = """
 <estufa id="E01">
     <sensores>
         <sensor id="S01" tipo="temperatura"><unidade>°C</unidade></sensor>
-        <sensor id="S02" tipo="pH"><unidade>pH</unidade></sensor>
+        <sensor id="S02" tipo="ph"><unidade>pH</unidade></sensor>
     </sensores>
     <leituras>
         <leitura id="L01">
@@ -42,7 +42,7 @@ XML_INVALIDO_REGRAS = """
 <estufa id="E01">
     <sensores>
         <sensor id="S01" tipo="temperatura"><unidade>°C</unidade></sensor>
-        <sensor id="S02" tipo="pH"><unidade>pH</unidade></sensor>
+        <sensor id="S02" tipo="ph"><unidade>pH</unidade></sensor>
     </sensores>
     <leituras>
         <leitura id="L03">
@@ -64,11 +64,11 @@ REGRAS_TESTE = {
     "min": 6,
     "max": 30
   },
-  "umidadeAr": {
+  "umidadear": {
     "min": 50,
     "max": 100
   },
-  "umidadeSolo": {
+  "umidadesolo": {
     "min": 40,
     "max": 70
   },
@@ -80,11 +80,11 @@ REGRAS_TESTE = {
     "min": 14000,
     "max": 40000
   },
-  "pH": {
+  "ph": {
     "min": 4.0,
     "max": 6.0
   },
-  "CE": {
+  "ce": {
     "min": 1.3,
     "max": 1.7
   }
@@ -94,11 +94,11 @@ REGRAS_DEFAULT = {
     "min": 12,
     "max": 25
   },
-  "umidadeAr": {
+  "umidadear": {
     "min": 60,
     "max": 80
   },
-  "umidadeSolo": {
+  "umidadesolo": {
     "min": 60,
     "max": 80
   },
@@ -110,11 +110,11 @@ REGRAS_DEFAULT = {
     "min": 15000,
     "max": 50000
   },
-  "pH": {
+  "ph": {
     "min": 5.5,
     "max": 6.5
   },
-  "CE": {
+  "ce": {
     "min": 1.2,
     "max": 1.8
   }
@@ -294,7 +294,7 @@ def test_get_alertas(client):
     # Verifica o conteúdo do alerta
     alerta = response_get.json[0]
     assert alerta['leitura_id'] == 'L04'
-    assert alerta['tipo'] == 'pH'
+    assert alerta['tipo'] == 'ph'
     assert alerta['valor_lido'] == 3.0
     assert alerta['faixa_ideal'] == '4.0 - 6.0'
     assert alerta['ficheiro_origem'] == 'L03.xml'
@@ -365,12 +365,12 @@ def test_get_exportar_csv_sucesso(client):
     csv_content = response_get.data.decode('utf-8')
 
     # Verifica o cabeçalho (';' é o separador)
-    assert "estufa_id;leitura_id;dataHora;sensorRef;valor" in csv_content
+    assert "estufa_id;leitura_id;dataHora;sensorRef;tipo;valor" in csv_content
 
     # Verifica os dados (',' é o decimal)
     # Dados do XML_VALIDO: L01 (22.5) e L02 (6.0)
-    assert "E01;L01;2025-11-10T14:30:00;S01;22,5" in csv_content
-    assert "E01;L02;2025-11-10T14:31:00;S02;6,0" in csv_content
+    assert "E01;L01;2025-11-10T14:30:00;S01;temperatura;22,5" in csv_content
+    assert "E01;L02;2025-11-10T14:31:00;S02;ph;6,0" in csv_content
 
 
 def test_get_exportar_csv_sem_dados(client):
@@ -400,3 +400,31 @@ def test_get_exportar_formato_invalido(client):
     assert response_get.content_type == 'application/json'
     assert 'error' in response_get.json
     assert "Formato de exportação não suportado" in response_get.json['error']
+
+
+def test_delete_leituras(client):
+    # O sucesso do DELETE /api/leituras.
+    # Cria um dado (POST) e verifica se o ficheiro existe no disco.
+    # Chama o DELETE e verifica se o ficheiro foi fisicamente removido.
+
+    # cria os dados
+    response_post = client.post('/api/leituras',
+                                data=XML_VALIDO,
+                                content_type='application/xml')
+    assert response_post.status_code == 201
+
+    # Verifica se o ficheiro foi realmente criado
+    caminho_ficheiro = os.path.join(DATA_DIR, "L01.xml")
+    assert os.path.exists(caminho_ficheiro)
+
+    #  chama o DELETE
+    response_delete = client.delete('/api/leituras')
+
+    # --- Assert ---
+
+    # Verifica a resposta da API (200 OK)
+    assert response_delete.status_code == 200
+    assert 'message' in response_delete.json
+    assert "excluídos com sucesso" in response_delete.json['message']
+    # O ficheiro não deve mais existir no disco
+    assert not os.path.exists(caminho_ficheiro)

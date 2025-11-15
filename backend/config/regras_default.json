@@ -3,28 +3,28 @@
     "min": 12,
     "max": 25
   },
-  "umidadeAr": {
+  "umidadear": {
     "min": 60,
     "max": 80
   },
-  "umidadeSolo": {
+  "umidadesolo": {
     "min": 60,
     "max": 80
   },
-  "co2": {
-    "min": 350,
-    "max": 1000
+  "ph": {
+    "min": 5.5,
+    "max": 6.5
+  },
+  "ce": {
+    "min": 1.2,
+    "max": 1.8
   },
   "luminosidade": {
     "min": 15000,
     "max": 50000
   },
-  "pH": {
-    "min": 5.5,
-    "max": 6.5
-  },
-  "CE": {
-    "min": 1.2,
-    "max": 1.8
+  "co2": {
+    "min": 350,
+    "max": 1000
   }
 }

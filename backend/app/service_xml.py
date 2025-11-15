@@ -60,53 +60,37 @@ def validar_regras_negocio(xml_doc):
     print("Log: Iniciando validação de regras de negócio...")
 
     try:
-        # cria um dicionário com todos os sensores
-        # ID_do_Sensor -> tipo (ex: "S01" -> "pH")
-        sensores = {}
-        # pega todas as leituras
-        for sensor in xml_doc.xpath("/estufa/sensores/sensor"):
-            sensor_id = sensor.get("id")
-            sensor_tipo = sensor.get("tipo")
-            sensores[sensor_id] = sensor_tipo
+        # 1. Criar o mapa de sensores (ex: "S04" -> "pH")
+        sensor_map = {}
+        for sensor_node in xml_doc.xpath("/estufa/sensores/sensor"):
+            sensor_id = sensor_node.get("id")
+            sensor_tipo = sensor_node.get("tipo")  # Sem .lower()
+            sensor_map[sensor_id] = sensor_tipo
 
-        # pega todas as leituras
-        for leitura in xml_doc.xpath("/estufa/leituras/leitura"):
-            leitura_id = leitura.get("id")
+        # 2. Validar cada leitura
+        for leitura_node in xml_doc.xpath("/estufa/leituras/leitura"):
+            sensor_ref_id = leitura_node.xpath("./sensorRef/@ref")[0]
+            valor = float(leitura_node.xpath("./valor/text()")[0])
 
-            sensor_ref_id = leitura.xpath("./sensorRef/@ref")[0]
-            tipo_sensor = sensores.get(sensor_ref_id)
-            valor_leitura = float(leitura.xpath("./valor/text()")[0])
+            # Obtém o tipo (ex: "pH") sem .lower()
+            tipo_sensor = sensor_map.get(sensor_ref_id)
 
-            # verifica a regra para o tipo de sensor
+            # Compara o tipo (ex: "pH") com as chaves (ex: "pH")
             if tipo_sensor in REGRAS_VALIDACAO:
-                regra = REGRAS_VALIDACAO[tipo_sensor]
-                min_val = regra["min"]
-                max_val = regra["max"]
+                regras = REGRAS_VALIDACAO[tipo_sensor]
+                if not (regras['min'] <= valor <= regras['max']):
+                    leitura_id = leitura_node.get("id")
+                    print(f"ALERTA (POST): Leitura ID {leitura_id} ({tipo_sensor}) está fora da faixa. Valor: {valor}")
+                    # (Nota: O T3 não rejeita, apenas regista o alerta para o T4)
 
-                if not (min_val <= valor_leitura <= max_val):
-                    # se tá fora da faixa, o alerta deve ser acionado
-                    msg_erro = f"ALERTA: Leitura ID {leitura_id}: Valor {valor_leitura} para {tipo_sensor} está fora da faixa permitida ({min_val} - {max_val})."
-                    print(f"Log: {msg_erro}")
-
-        print("Log: Validação de regras de negócio bem-sucedida.")
+        print("Log: Validação de regras de negócio concluída.")
         return True
 
-    except HTTPException as e:
-        # exceção 'abort', re-levanta (re-raise) ela para o Flask
-        # deixa o manipulador de erros do routes.py pegar
-        raise e
-
-    except (IndexError, ValueError, KeyError, TypeError):
-        # captura erros esperados de XPath ou conversão (ex: float(), dict key)
-        msg_erro = "Erro de regra de negócio: Estrutura interna do XML " \
-                   "inválida (ex: leitura sem valor ou sensorRef)."
-        print(f"Log: {msg_erro}")
-        abort(400, description=msg_erro)
-
     except Exception as e:
-        # bugs ou erros inesperados
-        print(f"Erro inesperado na validação de regras: {e}")
-        abort(500, description=f"Erro interno ao processar regras de negócio: {e}")
+
+        print(f"Erro durante a validação de regras de negócio: {e}")
+
+        abort(400, description=f"Erro ao processar regras de negócio: {e}")
 
 
 def persistir_xml(xml_data_string: str, xml_doc):
@@ -153,16 +137,28 @@ def persistir_xml(xml_data_string: str, xml_doc):
 def _xml_doc_para_dict(xml_doc):
     # converter um XML Doc (lxml) num dicionario
     # python limpo e legível (pronto para JSON).
+    # ATUALIZADO para incluir o tipo do sensor
+
     try:
         # Extrai o ID da estufa
         estufa_id = xml_doc.xpath("/estufa/@id")[0]
+
+        sensor_map = {}
+        for sensor_node in xml_doc.xpath("/estufa/sensores/sensor"):
+            sensor_id = sensor_node.get("id")
+            sensor_tipo = sensor_node.get("tipo")
+            sensor_map[sensor_id] = sensor_tipo
+
         leituras_lista = []
         # Itera sobre cada nó <leitura>
         for leitura_node in xml_doc.xpath("/estufa/leituras/leitura"):
+            sensor_ref_id = leitura_node.xpath("./sensorRef/@ref")[0]
+            tipo_sensor = sensor_map.get(sensor_ref_id, "tipo_desconhecido")
             leitura_dict = {
                 "id": leitura_node.get("id"),
                 "dataHora": leitura_node.xpath("./dataHora/text()")[0],
                 "sensorRef": leitura_node.xpath("./sensorRef/@ref")[0],
+                "tipo": tipo_sensor,
                 "valor": float(leitura_node.xpath("./valor/text()")[0])
             }
             leituras_lista.append(leitura_dict)
@@ -231,67 +227,54 @@ def ler_dados_de_alerta():
     alertas = []
 
     try:
-        # lista todos os ficheiros no diretório de dados
-        ficheiros = os.listdir(DATA_DIR)
-        xml_ficheiros = [f for f in ficheiros if f.endswith('.xml')]
+        for ficheiro_xml in os.listdir(DATA_DIR):
+            if not ficheiro_xml.endswith('.xml'):
+                continue
 
-        # itera por cada ficheiro XML
-        for ficheiro in xml_ficheiros:
-            filepath = os.path.join(DATA_DIR, ficheiro)
+            caminho_ficheiro = os.path.join(DATA_DIR, ficheiro_xml)
+            xml_doc = etree.parse(caminho_ficheiro)
 
-            try:
-                # Abre, lê e faz o parse do ficheiro
-                with open(filepath, 'r', encoding='utf-8') as f:
-                    xml_string = f.read()
-                xml_doc = etree.fromstring(xml_string.encode('utf-8'))
+            estufa_id = xml_doc.xpath("/estufa/@id")[0]
 
-                # Obtém o ID da estufa
-                estufa_id = xml_doc.xpath("/estufa/@id")[0]
+            # 1. Criar o mapa de sensores (ex: "S04" -> "pH")
+            sensor_map = {}
+            for sensor_node in xml_doc.xpath("/estufa/sensores/sensor"):
+                sensor_id = sensor_node.get("id")
+                sensor_tipo = sensor_node.get("tipo")  # Sem .lower()
+                sensor_map[sensor_id] = sensor_tipo
 
-                # verificação de regras (reutilizada do POST)
+            # 2. Validar cada leitura contra as regras ATUAIS
+            for leitura_node in xml_doc.xpath("/estufa/leituras/leitura"):
+                sensor_ref_id = leitura_node.xpath("./sensorRef/@ref")[0]
+                valor = float(leitura_node.xpath("./valor/text()")[0])
 
-                # descobre o tipo do sensor
-                sensores = {}
-                for sensor in xml_doc.xpath("/estufa/sensores/sensor"):
-                    sensores[sensor.get("id")] = sensor.get("tipo")
+                # Obtém o tipo (ex: "pH") sem .lower()
+                tipo_sensor = sensor_map.get(sensor_ref_id)
 
-                # itera sobre as leituras do ficheiro
-                for leitura in xml_doc.xpath("/estufa/leituras/leitura"):
-                    sensor_ref_id = leitura.xpath("./sensorRef/@ref")[0]
-                    tipo_sensor = sensores.get(sensor_ref_id)
-                    valor_leitura = float(leitura.xpath("./valor/text()")[0])
+                # Compara o tipo (ex: "pH") com as chaves (ex: "pH")
+                if tipo_sensor in REGRAS_VALIDACAO:
+                    regras = REGRAS_VALIDACAO[tipo_sensor]
 
-                    # verifica a regra
-                    if tipo_sensor in REGRAS_VALIDACAO:
-                        regra = REGRAS_VALIDACAO[tipo_sensor]
-                        min_val = regra["min"]
-                        max_val = regra["max"]
-
-                        # se NAO estiver na faixa, é um alerta e vai pra lista
-                        if not (min_val <= valor_leitura <= max_val):
-                            alerta_info = {
-                                "estufa_id": estufa_id,
-                                "leitura_id": leitura.get("id"),
-                                "sensor_id": sensor_ref_id,
-                                "tipo": tipo_sensor,
-                                "valor_lido": valor_leitura,
-                                "faixa_ideal": f"{min_val} - {max_val}",
-                                "dataHora": leitura.xpath("./dataHora/text()")[0],
-                                "ficheiro_origem": ficheiro
-                            }
-                            alertas.append(alerta_info)
-
-            except Exception as e:
-                # Loga erro de um ficheiro específico, mas continua para o próximo
-                print(f"Erro ao processar alertas do ficheiro {ficheiro}: {e}")
+                    if not (regras['min'] <= valor <= regras['max']):
+                        # Se estiver FORA da faixa, adiciona ao alerta
+                        alerta_info = {
+                            "estufa_id": estufa_id,
+                            "leitura_id": leitura_node.get("id"),
+                            "sensor_id": sensor_ref_id,
+                            "tipo": tipo_sensor,
+                            "valor_lido": valor,
+                            "faixa_ideal": f"{regras['min']} - {regras['max']}",
+                            "dataHora": leitura_node.xpath("./dataHora/text()")[0],
+                            "ficheiro_origem": ficheiro_xml
+                        }
+                        alertas.append(alerta_info)
 
         print("Log: Verificação de alertas concluída.")
         return alertas
 
     except Exception as e:
-        # Erro grave (ex: não consegue ler a pasta 'data/')
-        print(f"Erro crítico ao ler dados de alerta: {e}")
-        abort(500, description="Erro interno ao processar alertas.")
+        print(f"Erro ao ler dados de alerta: {e}")
+        return []
 
 
 def _get_regras_validacao():
@@ -381,6 +364,7 @@ def exportar_dados_para_csv():
                 'leitura_id': leitura.get('id'),
                 'dataHora': leitura.get('dataHora'),
                 'sensorRef': leitura.get('sensorRef'),
+                'tipo': leitura.get('tipo'),
                 'valor': leitura.get('valor')
             }
             lista_achatada.append(linha)
@@ -395,7 +379,7 @@ def exportar_dados_para_csv():
         df = pd.DataFrame(lista_achatada)
 
         # Garante a ordem correta das colunas
-        df = df[['estufa_id', 'leitura_id', 'dataHora', 'sensorRef', 'valor']]
+        df = df[['estufa_id', 'leitura_id', 'dataHora', 'sensorRef', 'tipo', 'valor']]
 
         # Converte para string CSV.
         # Usamos ';' como separador e ',' como decimal (bom para Excel em PT/BR)
@@ -407,3 +391,22 @@ def exportar_dados_para_csv():
     except Exception as e:
         print(f"Erro ao converter dados para CSV: {e}")
         abort(500, description="Erro interno ao gerar o ficheiro CSV.")
+
+
+def excluir_todas_as_leituras():
+    # Exclui permanentemente todos os ficheiros .xml da pasta DATA_DIR.
+    print("Log: Recebida ordem para excluir todos os dados...")
+    try:
+        ficheiros_excluidos = 0
+        for ficheiro in os.listdir(DATA_DIR):
+            if ficheiro.endswith('.xml'):
+                filepath = os.path.join(DATA_DIR, ficheiro)
+                os.remove(filepath)
+                ficheiros_excluidos += 1
+
+        print(f"Log: {ficheiros_excluidos} ficheiros excluídos.")
+        return {"message": f"{ficheiros_excluidos} ficheiros de leitura foram excluídos com sucesso."}
+
+    except Exception as e:
+        print(f"Erro crítico ao excluir ficheiros: {e}")
+        abort(500, description="Erro interno ao tentar excluir os dados.")

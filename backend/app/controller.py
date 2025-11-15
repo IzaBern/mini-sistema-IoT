@@ -99,3 +99,9 @@ def exportar_dados():
     response.headers["Content-Type"] = "text/csv; charset=utf-8"
 
     return response
+
+
+def excluir_leituras():
+    # Controlador para o pedido de exclusão de todas as leituras.
+    resultado = service_xml.excluir_todas_as_leituras()
+    return make_response(jsonify(resultado), 200)
