@@ -1,8 +1,8 @@
 # Mini-sistema IoT de Cultivo de Morangos
-## Atividade T3 — Back-end (API + Persistência em XML + Validação XSD)
-**Aluna:** Izadora Bernardi <br>
-**Disciplina:** Engenharia de Software <br>
----
+### Atividade T3 — Back-end (API + Persistência em XML + Validação XSD)
+### Atividade T4 — Interfaces (Front-end) sobre XML + API T3
+#### **Aluna:** Izadora Bernardi
+#### **Disciplina:** Engenharia de Software
 
 ## 1. Organização do diretório
 ```bash
@@ -31,7 +31,10 @@
 │       └── test_api.py
 │     
 ├── frontend/
-│    (em desenvolvimento)  
+│   ├── index.html
+│   ├── main.js
+│   ├── styles.css   
+│   └── favicon.ico
 │ 
 ├── .gitignore
 ├── requirements.txt
@@ -62,6 +65,9 @@
 
 * **Requisitos Abandonados:**
     * Os requisitos **RF4 (Relatórios Estatísticos)** e **RF7 (Gestão de Sensores)** foram abandonados devido à complexidade do sistema.
+
+* **Gestão de Dados (Adicionado posteriormente):**
+    * **`DELETE /api/leituras`:** Endpoint que apaga permanentemente *todos* os dados de leitura (`.xml`) do sistema, permitindo "limpar o histórico".
 ---
 
 ## 3. Arquitetura do Software
@@ -95,6 +101,10 @@ O projeto utiliza uma arquitetura de 3 camadas para garantir a separação de re
     * **Ação:** Lista todos os dados de todas as estufas.
     * **Resposta:** `200 OK` (com um JSON de todos os dados).
 
+* `DELETE /api/leituras`
+    * **Ação:** Deleta o histórico de leituras (backend/data/).
+    * **Resposta:** `200 OK`
+
 #### Alertas e Exportação
 * `GET /api/alertas`
     * **Ação:** Lista apenas as leituras que estão fora das faixas definidas.
@@ -117,3 +127,32 @@ O projeto utiliza uma arquitetura de 3 camadas para garantir a separação de re
 * `POST /api/configuracoes/reset`
     * **Ação:** Restaura as regras para os padrões de fábrica (o `regras_default.json`).
     * **Resposta:** `200 OK`
+
+## 5. Arquitetura do Frontend
+
+O frontend utiliza HTML, CSS, JavaScript puros. Por ser algo pequeno, foi desenhado como uma Single-Page Application (SPA):
+* `index.html`: Atua como a "casca" principal da aplicação.
+* `styles.css`: Define a aparência de todos os componentes.
+* `main.js`: Contém todo o "cérebro" do frontend. Ele controla a navegação (escondendo e mostrando as secções `<section>`) e faz todos os pedidos `fetch` para a API do T3.
+
+## 9. Funcionalidades Implementadas
+
+A interface é dividida em quatro "views" principais:
+
+* **`Dashboard` (RF5, RF8)**
+    * Consome `GET /api/leituras` assim que a página carrega.
+    * Inclui um link **"Exportar Dados para CSV" (RF8)** que aponta para o `GET /api/exportar`.
+    * Inclui um botão **"Limpar Histórico de Leituras"** que chama o `DELETE /api/leituras` .
+
+* **`Alertas` (RF3)**
+    * Consome `GET /api/alertas` assim que a página carrega.
+    * Mostra "cards" (em estilo de alerta) apenas para as leituras que o backend identificou como "fora da faixa".
+
+* **`Editor XML` (T4)**
+    * **Botão "Importar XML (Completo)"** e **"Importar XML (Simples)":** Preenche o `<textarea>` com um XML de teste com 7 e 1 sensore(s), respectivamente.
+    * **Botão "Enviar XML para API":** Envia o conteúdo do `<textarea>` para o `POST /api/leituras`. O frontend *não* bloqueia o envio; ele confia no backend (T3) para fazer a validação XSD e de regras. Se o envio for bem-sucedido, o Dashboard e os Alertas são atualizados automaticamente.
+    
+* **`Configuração` (RF6)**
+    * Consome `GET /api/configuracoes` ao carregar a aplicação, preenchendo o formulário com as faixas atuais e guardando-as num "cache" global.
+    * **"Salvar Regras":** Chama `PUT /api/configuracoes` para enviar os novos valores do formulário e atualiza o cache local.
+    * **"Restaurar Padrão de Fábrica":** Chama `POST /api/configuracoes/reset` e recarrega o formulário e o cache com os dados restaurados.

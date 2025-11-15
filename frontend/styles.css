@@ -1,0 +1,49 @@
+
+/* ======================================= */
+/* LÓGICA DE NAVEGAÇÃO SPA */
+/* ======================================= */
+.view-content {
+    display: none;
+}
+.view-content.active {
+    display: block;
+}
+.nav-button.active {
+    background-color: #0056b3; 
+    color: white;
+    font-weight: bold;
+}
+
+.feedback.success {
+    color: green;
+    font-weight: bold;
+}
+.feedback.error {
+    color: red;
+    font-weight: bold;
+}
+.feedback.info {
+    color: blue;
+}
+
+.error-box {
+    border: 1px solid red;
+    background-color: #fff0f0;
+    padding: 10px;
+}
+
+.data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+}
+.card-estufa, .card-alerta {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.card-alerta {
+    border-color: red;
+    background-color: #fff5f5;
+}

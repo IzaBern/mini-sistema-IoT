@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="styles.css">
+    <title>Mini-sistema IoT</title>
+</head>
+<body>
+    <header>
+        <h1>&#x1F353Mini-sistema IoT de Cultivo de Morangos&#x1F353</h1>
+    </header>
+
+    <nav>
+        <button data-view="dashboard" class="nav-button active">Dashboard</button>
+        <button data-view="alertas" class="nav-button">Alertas</button>
+        <button data-view="editor" class="nav-button">Editor XML</button>
+        <button data-view="configuracao" class="nav-button">Configuração</button>
+        <button data-view="sobre" class="nav-button">Sobre</button>
+    </nav>
+    
+    <main id="app-container" class="main-content">    
+    
+        <section id="view-dashboard" class="view-content active">
+            <h2>Dashboard de Leituras</h2>
+            <div class="button-group">
+                    <a href="http://127.0.0.1:5000/api/exportar?formato=csv" class="cta-button">
+                        Exportar Dados para CSV
+                    </a>
+                <button id="btn-limpar-dashboard" class="cta-button-danger">
+                    Limpar Histórico de Leituras
+                </button>
+            </div>
+            <hr>
+            <div id="dashboard-data-container" class="data-grid-dashboard">
+                <p>A carregar dados do backend...</p>
+            </div>
+        </section>
+
+        <section id="view-alertas" class="view-content">
+            <h2>Alertas Ativos</h2>
+            <p>Leituras que estão fora das faixas ideais.</p>
+            <hr>
+            <div id="alertas-data-container" class="data-grid-alertas">
+                <p>A carregar alertas do backend...</p>
+            </div>
+        </section>
+
+        <section id="view-editor" class="view-content">
+            <h2>Editor XML</h2>
+            <p>Importe um XML, edite possíveis valores de leitura e envie para o backend</p>
+            <div class="button-group">
+                <button id="btn-import-xml">Importar XML (Completo)</button>
+                <button id="btn-import-xml-simple">Importar XML  (Simples)</button>
+                <button id="btn-send-api" class="cta-button">Enviar XML para API</button>
+            </div>
+            <textarea id="xml-editor" rows="25" cols="80" placeholder="O XML aparecerá aqui..."></textarea>
+            <div id="editor-feedback"></div>
+        </section>
+
+        <section id="view-configuracao" class="view-content">
+            <h2>Configuração de Regras</h2>
+            <p>Defina as faixas (min/máx) para os alertas.</p>
+            <form id="config-form">
+                <p>A carregar regras atuais...</p>
+            </form>
+            <div class="button-group">
+                <button id="btn-save-config" class="cta-button">Salvar Regras</button>
+                <button id="btn-reset-config">Restaurar Padrão de Fábrica</button>
+            </div>
+            <div id="config-feedback"></div>
+        </section>
+
+        <section id="view-sobre" class="view-content">
+        <h2>Sobre o projeto</h2>
+        <p>Trata-se de um simulador de um <strong>mini-sistema <em>IoT/Agro</em></strong> para auxiliar no cultivo de morangos em sistema semi-hidropônico.</p>
+        <p>Desenvolvido como atividade avaliativa da disciplina de Engenharia de Software.</p>
+        <p> <strong>Nele é possível:</strong> </p>
+        <dl class="lista-funcionalidades">
+            <dt>&#x1F353 Verificar leituras dos sensores;</dt>
+            <dd>Clique em "Dashboard" para ver o histórico de todas as leituras da API.</dd>
+            
+            <dt>&#x1F353 Fazer o download das leituras em formato de planilhas (CSV);</dt>
+            <dd>O "Dashboard" possui um botão para exportar todo o histórico em CSV.</dd>
+
+            <dt>&#x1F353 Apagar as leituras (limpar o dashboard);</dt>
+            <dd>O "Dashboard" possui um botão para limpar o histórico de leituras.</dd>
+
+            <dt>&#x1F353 Verificar alertas quando um sensor está fora da faixa estabelecida;</dt>
+            <dd>Clique em "Alertas" para ver apenas as leituras que estão fora da faixa ideal.</dd>
+
+            <dt>&#x1F353 Importar, editar e enviar XML para a API;</dt>
+            <dd>Use o "Editor XML" para importar um exemplo, editar os valores e enviar novos dados para o backend.</dd>
+
+            <dt>&#x1F353 Alterar as faixas de alerta;</dt>
+            <dd>Use a "Configuração" para definir os valores (min/max) de cada sensor.</dd>
+
+            <dt>&#x1F353 Restaurar as faixas para o padrão.</dt>
+            <dd>A "Configuração" possui um botão de restaurar para as faixas padrão (baseado nas condições ideias de cultivo de morangos).</dd>
+            
+        </dl>
+        </section>
+    </main>
+
+    <script src="main.js" defer></script>
+</body>
+</html>
