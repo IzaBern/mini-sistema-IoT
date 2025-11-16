@@ -1,6 +1,93 @@
+/* ======================================= */
+/* Paleta de Cores (Morango) e Globais     */
+/* ======================================= */
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap');
+:root {
+    --cor-vermelho-escuro: #A62C3A; /* Vermelho Morango */
+    --cor-vermelho-claro: #E24F61;
+    --cor-verde: #1c8b20; /* Verde Folha */
+    --cor-verde-claro: #6CD270;
+    --cor-rosa-claro: #FFEDEE; /* Fundo de Alerta */
+    --cor-rosa-borda: #FFC0CB;
+    --cor-branco: #FFFFFF;
+    --cor-fundo: #F8F8F8; /* Fundo do body */
+    --cor-texto: #333;
+}
+
+body {
+    font-family: 'Lexend', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+    line-height: 1.6;
+}
 
 /* ======================================= */
-/* LÓGICA DE NAVEGAÇÃO SPA */
+/* Layout Principal (Header, Nav, Main)    */
+/* ======================================= */
+header {
+    background: var(--cor-branco);
+    color: var(--cor-vermelho-escuro);
+    text-align: center;
+    padding: 20px 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.8em;
+}
+
+nav {
+    background: var(--cor-vermelho-escuro);
+    text-align: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #EEE;
+    position: sticky; /* Menu fica preso no topo */
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.nav-button {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 5px;
+    font-size: 1em;
+    font-weight: 500;
+    color: var(--cor-branco);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.nav-button:hover {
+    background: var(--cor-rosa-claro);
+    color: var(--cor-vermelho-claro);
+}
+
+.nav-button.active {
+    background: var(--cor-branco);
+    color: var(--cor-vermelho-escuro);
+    font-weight: bold;
+}
+
+main#app-container {
+    max-width: 700px;
+    margin: 30px auto;
+    padding: 30px;
+    background: var(--cor-branco);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+h2{
+    color: var(--cor-verde);
+}
+/* ======================================= */
+/* Lógica de Navegação SPA   */
 /* ======================================= */
 .view-content {
     display: none;
@@ -8,42 +95,257 @@
 .view-content.active {
     display: block;
 }
-.nav-button.active {
-    background-color: #0056b3; 
-    color: white;
-    font-weight: bold;
+
+/* ======================================= */
+/* Estilos dos Cards (Dashboard & Alertas) */
+/* ======================================= */
+.data-grid-dashboard{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
 }
 
-.feedback.success {
-    color: green;
+.data-grid-alertas {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.card-estufa{
+    border: 1px solid #EEE;
+    border-radius: 8px;
+    padding: 20px;
+    background-color: var(--cor-branco);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    max-width: 700px;
+    margin: 0 auto;
+}
+.card-alerta {
+    border: 1px solid #EEE;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: var(--cor-branco);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    max-width: 700px;
+    margin: 0 auto; 
+}
+
+.card-estufa:hover,
+.card-alerta:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.card-alerta {
+    background-color: var(--cor-rosa-claro);
+    border-color: var(--cor-rosa-borda);
+    max-width: 300px;
+    font-size: 14px;
+    line-height: 1.0; 
+}
+
+.card-alerta h3 {
+    color: var(--cor-vermelho-escuro);
+}
+
+.card-estufa h3 {
+    color: var(--cor-verde);
+    margin-top: 0;
+}
+
+.lista-leituras {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0 0;
+}
+
+.lista-leituras li {
+    padding: 8px 0;
+    border-bottom: 1px dashed #F0F0F0;
+    color: #555;
+}
+
+/* ======================================= */
+/* Formulários (Configuração)              */
+/* ======================================= */
+#config-form fieldset {
+    border: 1px solid var(--cor-rosa-borda);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #fdfdfd;
+}
+
+#config-form legend {
+    color: var(--cor-vermelho-escuro);
     font-weight: bold;
+    font-size: 1.2em;
+    padding: 0 10px;
+}
+
+#config-form label {
+    display: inline-block;
+    margin: 10px 10px 0 0;
+    min-width: 50px;
+    color: #555;
+}
+
+#config-form input[type="number"] {
+    width: 80px;
+    padding: 8px 12px;
+    border: 1px solid #E0E0E0;
+    border-radius: 5px;
+    margin-right: 20px;
+    font-size: 1em;
+}
+
+/* ======================================= */
+/* Botões (Todos os tipos)                 */
+/* ======================================= */
+.button-group {
+    margin: 20px 0;
+}
+
+/* Botão de Ação Padrão (Verde) */
+.cta-button,
+#btn-send-api {
+    background-color: var(--cor-verde);
+    color: white;
+    padding: 8px 25px;
+    border: none;
+    margin: 15px 0;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+    margin-right: 10px;
+    text-decoration: none; /* Para o link <a> */
+    display: inline-block; /* Para o link <a> */
+}
+.cta-button:hover,
+#btn-send-api:hover {
+    background-color: var(--cor-verde-claro);
+}
+
+/* Botões Secundários (Editor, Reset) */
+#btn-import-xml, #btn-import-xml-simple,
+#btn-reset-config {
+    background-color: #f0f0f0;
+    color: #555;
+    border: 1px solid #ddd;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-right: 10px;
+    transition: background-color 0.3s ease;
+}
+#btn-import-xml:hover, #btn-import-xml-simple:hover,
+#btn-reset-config:hover {
+    background-color: #e0e0e0;
+}
+
+/* Botão de Perigo (Limpar) */
+#btn-limpar-dashboard {
+    background-color: var(--cor-rosa-claro);
+    color: var(--cor-vermelho-escuro);
+    border: 1px solid var(--cor-vermelho-escuro);
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    margin-right: 10px;
+    transition: background-color 0.3s ease;
+}
+#btn-limpar-dashboard:hover {
+    background-color: #fff;
+    border-color: var(--cor-vermelho-claro);
+}
+
+/* Botão de Salvar Config (Vermelho) */
+#btn-save-config {
+    background-color: var(--cor-vermelho-escuro);
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+    margin-right: 10px;
+}
+#btn-save-config:hover {
+    background-color: var(--cor-vermelho-claro);
+}
+
+/* ======================================= */
+/* Editor XML e Feedback                   */
+/* ======================================= */
+#xml-editor {
+    width: calc(100% - 34px); /* 100% - padding e borda */
+    padding: 15px;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.95em;
+    background-color: #FDFDFD;
+    resize: vertical;
+    min-height: 250px;
+}
+
+.feedback {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 0.95em;
+    white-space: pre-wrap; /* Formata quebras de linha */
+    border: 1px solid transparent;
+}
+.feedback.success {
+    background-color: #E6F7E6;
+    color: #28A745;
+    border-color: #C3E6CB;
 }
 .feedback.error {
-    color: red;
-    font-weight: bold;
+    background-color: var(--cor-rosa-claro);
+    color: var(--cor-vermelho-escuro);
+    border-color: var(--cor-rosa-borda);
 }
 .feedback.info {
-    color: blue;
+    background-color: #E6F0F8;
+    color: #007BFF;
+    border-color: #B8DAFF;
+}
+
+/* ======================================= */
+/* Outros (Lista Sobre, Caixa de Erro)     */
+/* ======================================= */
+.lista-funcionalidades {
+    margin-left: 20px;
+    max-width: 800px;
+}
+.lista-funcionalidades dt {
+    font-weight: bold;
+    color: var(--cor-vermelho-escuro);
+    margin-top: 12px;
+}
+.lista-funcionalidades dd {
+    margin-left: 20px;
+    margin-bottom: 5px;
+    color: #555;
 }
 
 .error-box {
-    border: 1px solid red;
-    background-color: #fff0f0;
-    padding: 10px;
-}
-
-.data-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
-}
-.card-estufa, .card-alerta {
-    border: 1px solid #ddd;
+    background-color: var(--cor-rosa-claro);
+    border: 1px solid var(--cor-rosa-borda);
+    color: var(--cor-vermelho-escuro);
+    padding: 20px;
     border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.card-alerta {
-    border-color: red;
-    background-color: #fff5f5;
+    margin-top: 20px;
 }

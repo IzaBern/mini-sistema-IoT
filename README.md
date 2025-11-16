@@ -135,7 +135,7 @@ O frontend utiliza HTML, CSS, JavaScript puros. Por ser algo pequeno, foi desenh
 * `styles.css`: Define a aparência de todos os componentes.
 * `main.js`: Contém todo o "cérebro" do frontend. Ele controla a navegação (escondendo e mostrando as secções `<section>`) e faz todos os pedidos `fetch` para a API do T3.
 
-## 9. Funcionalidades Implementadas
+## 6. Funcionalidades Implementadas
 
 A interface é dividida em quatro "views" principais:
 
@@ -156,3 +156,8 @@ A interface é dividida em quatro "views" principais:
     * Consome `GET /api/configuracoes` ao carregar a aplicação, preenchendo o formulário com as faixas atuais e guardando-as num "cache" global.
     * **"Salvar Regras":** Chama `PUT /api/configuracoes` para enviar os novos valores do formulário e atualiza o cache local.
     * **"Restaurar Padrão de Fábrica":** Chama `POST /api/configuracoes/reset` e recarrega o formulário e o cache com os dados restaurados.
+
+## 7. Visual do site "Perfumaria"
+Aproveitando a deixa do mini-sistema tratar sobre o cultivo de morangos, quis "perfumar" um pouco o visual do site com uma paleta de cores baseado e vermelho, rosa, verde e branco.
+
+![visual do site](visual_site.png)
